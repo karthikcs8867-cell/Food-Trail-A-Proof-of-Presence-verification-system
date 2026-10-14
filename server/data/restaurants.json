@@ -1,0 +1,133 @@
+[
+  {
+    "ownerId": "ft_cadbd67bd7cf3a54",
+    "name": "Trattoria Roma - Main Branch",
+    "tagline": "",
+    "description": "",
+    "address": "123 Main St",
+    "location": {
+      "lat": 12.9716,
+      "lng": 77.5946
+    },
+    "geofenceRadiusMeters": 200,
+    "cuisine": [
+      "Italian",
+      "Pizza",
+      "Pasta"
+    ],
+    "priceRange": "$$",
+    "phone": "+1 (555) 345-6789",
+    "email": "test_owner@foodtrail.com",
+    "coverImage": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
+    "photos": [
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80"
+    ],
+    "menuItems": [
+      {
+        "id": "m_1",
+        "name": "Signature House Special",
+        "description": "Chef special prepared fresh with local herbs",
+        "price": 22,
+        "category": "Mains",
+        "image": ""
+      },
+      {
+        "id": "m_2",
+        "name": "Artisan Dessert Platter",
+        "description": "Decadent sweet treats",
+        "price": 10,
+        "category": "Desserts",
+        "image": ""
+      }
+    ],
+    "isApproved": true,
+    "status": "approved",
+    "ratingAverage": 4.8,
+    "reviewCount": 1,
+    "_id": "ft_69f634800817b42f",
+    "id": "ft_69f634800817b42f",
+    "createdAt": "2026-08-28T12:00:04.671Z",
+    "updatedAt": "2026-08-28T12:00:04.671Z"
+  },
+  {
+    "ownerId": "ft_cadbd67bd7cf3a54",
+    "name": "Trattoria Roma - Waterfront Branch",
+    "tagline": "",
+    "description": "",
+    "address": "456 Harbor Pier Way",
+    "location": {
+      "lat": 12.975,
+      "lng": 77.601
+    },
+    "geofenceRadiusMeters": 200,
+    "cuisine": [
+      "Italian",
+      "Seafood"
+    ],
+    "priceRange": "$$",
+    "phone": "+1 (555) 345-6789",
+    "email": "test_owner@foodtrail.com",
+    "coverImage": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
+    "photos": [
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80"
+    ],
+    "menuItems": [
+      {
+        "id": "m_1",
+        "name": "Signature House Special",
+        "description": "Chef special prepared fresh with local herbs",
+        "price": 22,
+        "category": "Mains",
+        "image": ""
+      },
+      {
+        "id": "m_2",
+        "name": "Artisan Dessert Platter",
+        "description": "Decadent sweet treats",
+        "price": 10,
+        "category": "Desserts",
+        "image": ""
+      }
+    ],
+    "isApproved": false,
+    "ratingAverage": 0,
+    "reviewCount": 0,
+    "_id": "ft_785cc4bbf60614e9",
+    "id": "ft_785cc4bbf60614e9",
+    "createdAt": "2026-08-28T12:04:15.818Z",
+    "updatedAt": "2026-08-28T12:04:15.818Z"
+  },
+  {
+    "ownerId": "ft_ac4047771fe3ecdc",
+    "name": "Mycem",
+    "tagline": "",
+    "description": "",
+    "address": "Mysore",
+    "location": {
+      "lat": 12.972,
+      "lng": 77.595
+    },
+    "geofenceRadiusMeters": 200,
+    "region": "Downtown Metro",
+    "cuisine": [
+      "Italian",
+      "Pizza",
+      "Pasta"
+    ],
+    "priceRange": "$$",
+    "phone": "+1 (555) 345-6789",
+    "email": "karthik55@gmail.com",
+    "coverImage": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
+    "photos": [
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80"
+    ],
+    "menuItems": [],
+    "isApproved": false,
+    "ratingAverage": 0,
+    "reviewCount": 0,
+    "_id": "ft_b449d40f5e405e2c",
+    "id": "ft_b449d40f5e405e2c",
+    "createdAt": "2026-10-08T07:54:39.319Z",
+    "updatedAt": "2026-10-08T07:54:39.319Z"
+  }
+]

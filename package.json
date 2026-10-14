@@ -1,0 +1,16 @@
+{
+  "name": "foodtrail",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install && npm --prefix server install && npm --prefix apps/customer install && npm --prefix apps/restaurant install && npm --prefix apps/admin install",
+    "server":     "npm --prefix server run dev",
+    "customer":   "npm --prefix apps/customer run dev",
+    "restaurant": "npm --prefix apps/restaurant run dev",
+    "admin":      "npm --prefix apps/admin run dev",
+    "dev": "npx concurrently --kill-others-on-fail -n SERVER,CUSTOMER,RESTAURANT,ADMIN -c \"cyan,green,yellow,magenta\" \"npm run server\" \"npm run customer\" \"npm run restaurant\" \"npm run admin\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

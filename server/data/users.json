@@ -1,0 +1,142 @@
+[
+  {
+    "name": "karthik",
+    "email": "karthikcs8867@gmail.com",
+    "passwordHash": "$2a$10$swXBg/SPf29KgLYL2LdXPOlXTDDn9fhOjOWjkS4dky4xMIvKMiMhK",
+    "role": "customer",
+    "authProvider": "local",
+    "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+    "_id": "ft_51e8ec1c733609ba",
+    "id": "ft_51e8ec1c733609ba",
+    "createdAt": "2026-08-28T11:05:56.067Z",
+    "updatedAt": "2026-08-28T11:05:56.067Z"
+  },
+  {
+    "name": "Karthik C S",
+    "email": "karthikcs5467@gmail.com",
+    "passwordHash": "$2a$10$oMmlIkpkpDLtrnVN/QANb.iClN4APCvWvxHmgTkn2BvtgFKxYaVNK",
+    "role": "restaurant_owner",
+    "authProvider": "local",
+    "avatarUrl": "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=150&auto=format&fit=crop&q=80",
+    "_id": "ft_a2f0a572b866073f",
+    "id": "ft_a2f0a572b866073f",
+    "createdAt": "2026-08-28T11:08:01.884Z",
+    "updatedAt": "2026-08-28T11:08:01.884Z"
+  },
+  {
+    "name": "karthikcs",
+    "email": "karthik554@gmail.com",
+    "passwordHash": "$2a$10$jDauCgCc4EFtkcrWPcAVj.B3SjEsGO8gLGE1FAqas7vLop3XPW3.C",
+    "role": "restaurant_owner",
+    "authProvider": "local",
+    "avatarUrl": "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=150&auto=format&fit=crop&q=80",
+    "_id": "ft_dd6c960526bbf5ca",
+    "id": "ft_dd6c960526bbf5ca",
+    "createdAt": "2026-08-28T11:18:41.139Z",
+    "updatedAt": "2026-08-28T11:18:41.139Z"
+  },
+  {
+    "name": "Chef Mario",
+    "email": "test_owner@foodtrail.com",
+    "passwordHash": "$2a$10$gW5yeS.bRHEpSNaPEBFe6OnRfkj1MegXihpNH4rvc2EOAiYJM6LWu",
+    "role": "restaurant_owner",
+    "authProvider": "local",
+    "avatarUrl": "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=150&auto=format&fit=crop&q=80",
+    "_id": "ft_cadbd67bd7cf3a54",
+    "id": "ft_cadbd67bd7cf3a54",
+    "createdAt": "2026-08-28T11:56:19.103Z",
+    "updatedAt": "2026-08-28T11:56:19.103Z"
+  },
+  {
+    "name": "Super Admin",
+    "email": "main_admin@foodtrail.com",
+    "passwordHash": "$2a$10$v7czJVYZAVsXGD0bAvMwFezX1hUVcfdAZQl1Gj1xT5TyxiHgkaO.q",
+    "role": "admin",
+    "authProvider": "local",
+    "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+    "_id": "ft_b078213ebf7b37bd",
+    "id": "ft_b078213ebf7b37bd",
+    "createdAt": "2026-08-28T12:21:06.647Z",
+    "updatedAt": "2026-08-28T12:21:06.647Z"
+  },
+  {
+    "name": "Alex North Lead",
+    "email": "north_admin@foodtrail.com",
+    "passwordHash": "$2a$10$v7czJVYZAVsXGD0bAvMwFezX1hUVcfdAZQl1Gj1xT5TyxiHgkaO.q",
+    "role": "regional_admin",
+    "assignedRegion": "North District",
+    "region": "North District",
+    "authProvider": "local",
+    "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+    "_id": "ft_0f070ac15fd1132e",
+    "id": "ft_0f070ac15fd1132e",
+    "createdAt": "2026-08-28T12:22:59.420Z",
+    "updatedAt": "2026-08-28T12:22:59.420Z"
+  },
+  {
+    "name": "Elena South Lead",
+    "email": "south_admin@foodtrail.com",
+    "passwordHash": "$2a$10$v7czJVYZAVsXGD0bAvMwFezX1hUVcfdAZQl1Gj1xT5TyxiHgkaO.q",
+    "role": "regional_admin",
+    "assignedRegion": "South Coast",
+    "region": "South Coast",
+    "assignmentReason": "Overseeing coastal food trail partner onboarding and GPS geofence verifications",
+    "authProvider": "local",
+    "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+    "_id": "ft_756fae6459bf7c07",
+    "id": "ft_756fae6459bf7c07",
+    "createdAt": "2026-08-28T12:43:36.237Z",
+    "updatedAt": "2026-08-28T12:43:36.237Z"
+  },
+  {
+    "name": "karthik",
+    "email": "karthik55@gmail.com",
+    "passwordHash": "$2a$10$j23LE1AqB4uxOBiJID9sJersiKXiy3fokmKpFhxp7qcMSrgnkYrKq",
+    "role": "restaurant_owner",
+    "authProvider": "local",
+    "avatarUrl": "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=150&auto=format&fit=crop&q=80",
+    "_id": "ft_ac4047771fe3ecdc",
+    "id": "ft_ac4047771fe3ecdc",
+    "createdAt": "2026-10-08T07:13:29.004Z",
+    "updatedAt": "2026-10-08T07:13:29.004Z"
+  },
+  {
+    "name": "Karthik C S",
+    "email": "karthikcs123@gmail.com",
+    "passwordHash": "$2a$10$OHu3iGjfta/.rOuBEOYgRO5OCAyNmENqy7TBf9KAiMFtxSjfteh62",
+    "role": "customer",
+    "authProvider": "local",
+    "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+    "_id": "ft_6bf9eea0dc0c0060",
+    "id": "ft_6bf9eea0dc0c0060",
+    "createdAt": "2026-10-08T07:52:52.700Z",
+    "updatedAt": "2026-10-08T07:52:52.700Z"
+  },
+  {
+    "name": "Test Customer",
+    "email": "test_1791811797092@example.com",
+    "role": "customer",
+    "_id": "ft_e399d0752224d198",
+    "id": "ft_e399d0752224d198",
+    "createdAt": "2026-10-12T13:29:57.093Z",
+    "updatedAt": "2026-10-12T13:29:57.093Z"
+  },
+  {
+    "name": "Test Customer",
+    "email": "test_1791812615109@example.com",
+    "role": "customer",
+    "_id": "ft_db06bd169f13d215",
+    "id": "ft_db06bd169f13d215",
+    "createdAt": "2026-10-12T13:43:35.110Z",
+    "updatedAt": "2026-10-12T13:43:35.110Z"
+  },
+  {
+    "name": "Test Customer",
+    "email": "test_1791812640667@example.com",
+    "role": "customer",
+    "_id": "ft_c6ce0289fd1c704d",
+    "id": "ft_c6ce0289fd1c704d",
+    "createdAt": "2026-10-12T13:44:00.667Z",
+    "updatedAt": "2026-10-12T13:44:00.667Z"
+  }
+]
