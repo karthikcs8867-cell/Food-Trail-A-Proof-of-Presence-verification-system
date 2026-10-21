@@ -50,7 +50,7 @@
   {
     "name": "Super Admin",
     "email": "main_admin@foodtrail.com",
-    "passwordHash": "$2a$10$v7czJVYZAVsXGD0bAvMwFezX1hUVcfdAZQl1Gj1xT5TyxiHgkaO.q",
+    "passwordHash": "$2a$10$bSv61VOb55CIg2kF65Bo..i7DGRJJhYxK8N9HQewvTKhhCwq6ermG",
     "role": "admin",
     "authProvider": "local",
     "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
@@ -64,8 +64,8 @@
     "email": "north_admin@foodtrail.com",
     "passwordHash": "$2a$10$v7czJVYZAVsXGD0bAvMwFezX1hUVcfdAZQl1Gj1xT5TyxiHgkaO.q",
     "role": "regional_admin",
-    "assignedRegion": "North District",
-    "region": "North District",
+    "assignedRegion": "Belagavi",
+    "region": "Belagavi",
     "authProvider": "local",
     "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
     "_id": "ft_0f070ac15fd1132e",
@@ -78,8 +78,8 @@
     "email": "south_admin@foodtrail.com",
     "passwordHash": "$2a$10$v7czJVYZAVsXGD0bAvMwFezX1hUVcfdAZQl1Gj1xT5TyxiHgkaO.q",
     "role": "regional_admin",
-    "assignedRegion": "South Coast",
-    "region": "South Coast",
+    "assignedRegion": "Dakshina Kannada",
+    "region": "Dakshina Kannada",
     "assignmentReason": "Overseeing coastal food trail partner onboarding and GPS geofence verifications",
     "authProvider": "local",
     "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
@@ -138,5 +138,41 @@
     "id": "ft_c6ce0289fd1c704d",
     "createdAt": "2026-10-12T13:44:00.667Z",
     "updatedAt": "2026-10-12T13:44:00.667Z"
+  },
+  {
+    "name": "mohan",
+    "email": "karthik56@gmail.com",
+    "passwordHash": "$2a$10$ooMJxPu.B4drEB.KZeIMnO2UaVJw7vMRa94ydb//9hm8OwxkWJNJm",
+    "role": "restaurant_owner",
+    "authProvider": "local",
+    "avatarUrl": "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=150&auto=format&fit=crop&q=80",
+    "_id": "ft_2e08e0670d08da1f",
+    "id": "ft_2e08e0670d08da1f",
+    "createdAt": "2026-10-14T13:24:37.248Z",
+    "updatedAt": "2026-10-14T13:24:37.248Z"
+  },
+  {
+    "name": "Test User",
+    "email": "testuser@foodtrail.com",
+    "passwordHash": "$2a$10$ha6NWvRr4oT4KIuiYtHZdOC6cZF0USCf7si1vCpC/TN4OQeWcvT5u",
+    "role": "customer",
+    "authProvider": "local",
+    "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+    "_id": "ft_27f6ceef8d06c792",
+    "id": "ft_27f6ceef8d06c792",
+    "createdAt": "2026-10-15T13:45:10.683Z",
+    "updatedAt": "2026-10-15T13:45:10.683Z"
+  },
+  {
+    "name": "Mohan CS",
+    "email": "mohancs5467@gmail.com",
+    "passwordHash": "$2a$10$w8jffst1gOP8V74mcQBQEOhEycymDbEefc1kN/MQYwbHjr4NjIkSi",
+    "role": "restaurant_owner",
+    "authProvider": "local",
+    "avatarUrl": "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=150&auto=format&fit=crop&q=80",
+    "_id": "ft_431fe330189e32bc",
+    "id": "ft_431fe330189e32bc",
+    "createdAt": "2026-10-21T04:36:27.589Z",
+    "updatedAt": "2026-10-21T04:36:27.589Z"
   }
 ]

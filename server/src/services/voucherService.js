@@ -25,15 +25,15 @@ export function issueVoucherForVerifiedReview(user, restaurant, review) {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days validity
 
-  // Discount configuration based on review or restaurant pricing
-  const discountOptions = [
-    '$10 OFF Next Dining Experience',
-    '15% OFF Entire Bill (Min. spend $30)',
-    'Complimentary Signature Dessert or Drink',
-    '20% OFF Chef Special Entree',
-    '$15 OFF Food & Beverage',
-  ];
-  const discountTitle = discountOptions[Math.floor(Math.random() * discountOptions.length)];
+  // Discount configuration: generate both a percentage (1-10%) and a rupee amount (₹1-100)
+  // Retrieve admin-configured discount limits (percentage 1‑50% and amount)
+  const config = db.voucherConfigs.findOne() || { maxPercent: 10, maxAmount: 100 };
+  const maxPercent = Math.min(Math.max(config.maxPercent || 10, 1), 50); // enforce 1‑50% range
+  const maxAmount = config.maxAmount || 100;
+  const perc = Math.floor(Math.random() * maxPercent) + 1; // 1‑% to maxPercent%
+  const amt = Math.floor(Math.random() * maxAmount) + 1; // ₹1 to maxAmount
+  // Store both values for later comparison during redemption
+  const discountTitle = `${perc}% OFF or ₹${amt} OFF`;
 
   const voucherData = {
     voucherCode,
@@ -44,6 +44,8 @@ export function issueVoucherForVerifiedReview(user, restaurant, review) {
       userId: user._id,
       userName: user.name,
       discount: discountTitle,
+      perc,
+      amt,
       expiresAt: expiresAt.toISOString(),
       securitySig: crypto.createHash('sha256').update(`${voucherCode}-${restaurant._id}`).digest('hex').slice(0, 16),
     }),
@@ -54,6 +56,8 @@ export function issueVoucherForVerifiedReview(user, restaurant, review) {
     restaurantAddress: restaurant.address,
     reviewId: review._id,
     discountTitle,
+    perc,
+    amt,
     status: 'active', // 'active' | 'redeemed' | 'expired'
     expiresAt: expiresAt.toISOString(),
     createdAt: now.toISOString(),
@@ -72,7 +76,7 @@ export function issueVoucherForVerifiedReview(user, restaurant, review) {
  */
 export function redeemVoucher(voucherCode, ownerUserId, specificRestaurantId = null) {
   let cleanCode = voucherCode.trim();
-  
+
   // If QR code data was passed as raw JSON, parse out the voucher code
   if (cleanCode.startsWith('{') && cleanCode.endsWith('}')) {
     try {
@@ -127,9 +131,13 @@ export function redeemVoucher(voucherCode, ownerUserId, specificRestaurantId = n
     redeemedByOwnerId: ownerUserId,
   });
 
+  // Determine which discount is greater (percentage vs amount)
+  const applyPerc = voucher.perc >= voucher.amt;
+  const appliedDiscount = applyPerc ? `${voucher.perc}% OFF` : `₹${voucher.amt} OFF`;
   return {
     success: true,
-    message: `Voucher '${voucher.voucherCode}' (${voucher.discountTitle}) successfully redeemed!`,
+    message: `Voucher '${voucher.voucherCode}' (${appliedDiscount}) successfully redeemed!`,
+    appliedDiscount,
     voucher: updatedVoucher,
   };
 }

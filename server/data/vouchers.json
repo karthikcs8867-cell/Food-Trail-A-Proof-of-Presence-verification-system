@@ -46,7 +46,7 @@
     "restaurantCover": "",
     "restaurantAddress": "123 Test St",
     "reviewId": "rev_test_01",
-    "discountTitle": "15% OFF Entire Bill (Min. spend $30)",
+    "discountTitle": "15% OFF Entire Bill (Min. spend ₹500)",
     "status": "redeemed",
     "expiresAt": "2026-11-11T13:44:00.669Z",
     "createdAt": "2026-10-12T13:44:00.669Z",
@@ -55,5 +55,24 @@
     "updatedAt": "2026-10-12T13:44:00.670Z",
     "redeemedAt": "2026-10-12T13:44:00.670Z",
     "redeemedByOwnerId": "owner_01"
+  },
+  {
+    "voucherCode": "FT-MYCE-3716",
+    "qrCodeData": "{\"code\":\"FT-MYCE-3716\",\"restaurantId\":\"ft_b449d40f5e405e2c\",\"restaurantName\":\"Mycem\",\"userId\":\"ft_e399d0752224d198\",\"userName\":\"Test Customer\",\"discount\":\"5% OFF or ₹73 OFF\",\"perc\":5,\"amt\":73,\"expiresAt\":\"2026-11-14T14:16:33.514Z\",\"securitySig\":\"b79e5f0a19f708d3\"}",
+    "userId": "ft_e399d0752224d198",
+    "restaurantId": "ft_b449d40f5e405e2c",
+    "restaurantName": "Mycem",
+    "restaurantCover": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
+    "restaurantAddress": "Mysore",
+    "reviewId": "ft_23130627f24137dd",
+    "discountTitle": "5% OFF or ₹73 OFF",
+    "perc": 5,
+    "amt": 73,
+    "status": "active",
+    "expiresAt": "2026-11-14T14:16:33.514Z",
+    "createdAt": "2026-10-15T14:16:33.514Z",
+    "_id": "ft_d5a77de12d28872b",
+    "id": "ft_d5a77de12d28872b",
+    "updatedAt": "2026-10-15T14:16:33.514Z"
   }
 ]

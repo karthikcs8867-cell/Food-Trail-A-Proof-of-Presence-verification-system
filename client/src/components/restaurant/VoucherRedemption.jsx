@@ -12,11 +12,32 @@ export default function VoucherRedemption() {
   const { showToast } = useToast();
 
   const [inputCode, setInputCode] = useState('');
+  const [totalAmount, setTotalAmount] = useState('');
   const [lookingUp, setLookingUp] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
   const [lookupResult, setLookupResult] = useState(null);
   const [redeemSuccess, setRedeemSuccess] = useState(null);
   const [scannerOpen, setScannerOpen] = useState(false);
+  // Compute discount based on lookupResult and totalAmount, capped at ₹100 or 10% of total
+  let discountAmount = 0;
+  let finalPrice = 0;
+  if (lookupResult?.voucher && totalAmount) {
+    const title = lookupResult.voucher.discountTitle;
+    const amountMatch = title.match(/₹\s?(\d+)/);
+    const percMatch = title.match(/(\d+)%/);
+    let rawDiscount = 0;
+    if (amountMatch) {
+      rawDiscount = parseInt(amountMatch[1], 10);
+    } else if (percMatch) {
+      const perc = parseInt(percMatch[1], 10);
+      rawDiscount = (parseFloat(totalAmount) * perc) / 100;
+    }
+    // Apply caps: maximum ₹100 or 10% of total amount, whichever is lower
+    const maxByPercent = parseFloat(totalAmount) * 0.10;
+    const maxCap = Math.min(100, maxByPercent);
+    discountAmount = Math.min(rawDiscount, maxCap);
+    finalPrice = Math.max(0, parseFloat(totalAmount) - discountAmount);
+  }
 
   // Initialize html5-qrcode scanner when scannerOpen is true
   useEffect(() => {
@@ -223,6 +244,23 @@ export default function VoucherRedemption() {
           </div>
           <div style={{ fontSize: '0.9rem', color: '#FFF', fontWeight: 700 }}>
             Valid at: {lookupResult.voucher.restaurantName}
+          </div>
+          {/* Total Bill Amount Input */}
+          <div style={{ marginTop: '12px' }}>
+            <input
+              type="number"
+              placeholder="Total Bill Amount"
+              className="form-input"
+              value={totalAmount}
+              onChange={(e) => setTotalAmount(e.target.value)}
+              style={{ height: '44px', width: '100%', fontSize: '0.95rem' }}
+            />
+            {totalAmount && (
+              <div style={{ marginTop: '8px', fontSize: '0.9rem', color: '#FFF' }}>
+                <div>Discount Applied: ₹{discountAmount.toFixed(2)}</div>
+                <div>Final Price: ₹{finalPrice.toFixed(2)}</div>
+              </div>
+            )}
           </div>
 
           <div style={{

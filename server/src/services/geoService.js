@@ -32,15 +32,15 @@ export function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Verifies if user coordinates fall inside the restaurant's geofenced radius
+ * Verifies if user coordinates fall inside the restaurant's geofenced radius (50m of registered location)
  * @param {number} userLat 
  * @param {number} userLng 
  * @param {number} restLat 
  * @param {number} restLng 
- * @param {number} radiusMeters (e.g. 200m)
- * @param {number} toleranceMeters (e.g. 50m GPS jitter tolerance)
+ * @param {number} radiusMeters (default 50m)
+ * @param {number} toleranceMeters (default 0m)
  */
-export function verifyProximity(userLat, userLng, restLat, restLng, radiusMeters = 200, toleranceMeters = 50) {
+export function verifyProximity(userLat, userLng, restLat, restLng, radiusMeters = 50, toleranceMeters = 0) {
   if (userLat == null || userLng == null || restLat == null || restLng == null) {
     return {
       isWithinRadius: false,
@@ -73,7 +73,7 @@ export function verifyProximity(userLat, userLng, restLat, restLng, radiusMeters
     toleranceMeters,
     effectiveRadius,
     summary: isWithinRadius
-      ? `Proximity verified! Customer is ${distanceMeters}m away (within ${radiusMeters}m geofence).`
-      : `Customer is ${distanceMeters}m away, which exceeds the ${radiusMeters}m restaurant geofence.`,
+      ? `Proximity verified! Customer is ${distanceMeters}m away (within ${effectiveRadius}m radius of registered restaurant location).`
+      : `Customer is ${distanceMeters}m away, which exceeds the ${effectiveRadius}m radius of registered restaurant location.`,
   };
 }

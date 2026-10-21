@@ -10,11 +10,37 @@ import {
 import LoginPage from './LoginPage';
 
 const STANDARD_REGIONS = [
-  'Downtown Metro',
-  'North District',
-  'South Coast',
-  'East Bay',
-  'West Hub',
+  'Bagalkote',
+  'Ballari',
+  'Belagavi',
+  'Bengaluru Rural',
+  'Bengaluru Urban',
+  'Bidar',
+  'Chamarajanagar',
+  'Chikkaballapur',
+  'Chikkamagaluru',
+  'Chitradurga',
+  'Dakshina Kannada',
+  'Davanagere',
+  'Dharwad',
+  'Gadag',
+  'Hassan',
+  'Haveri',
+  'Kalaburagi',
+  'Kodagu',
+  'Kolar',
+  'Koppal',
+  'Mandya',
+  'Mysuru',
+  'Raichur',
+  'Ramanagara',
+  'Shivamogga',
+  'Tumakuru',
+  'Udupi',
+  'Uttara Kannada',
+  'Vijayanagara',
+  'Vijayapura',
+  'Yadgir',
 ];
 
 // ────────────────────────────────────────────────────
@@ -49,7 +75,7 @@ function StatCard({ label, value, icon, color = '#FF5A36', subtitle }) {
 function AdminDashboard({ user, token }) {
   const { showToast } = useToast();
   const isSuperAdmin = user.role === 'admin';
-  const assignedRegion = user.assignedRegion || user.region || 'Downtown Metro';
+  const assignedRegion = user.assignedRegion || user.region || 'Bengaluru Urban';
 
   // Filters & Tabs
   const [tab, setTab]                       = useState('restaurants');
@@ -58,14 +84,19 @@ function AdminDashboard({ user, token }) {
   const [regionalAdmins, setRegionalAdmins] = useState([]);
   const [users, setUsers]                   = useState([]);
   const [reviews, setReviews]               = useState([]);
-  const [loading, setLoading]               = useState(false);
+  const [loading, setLoading] = useState(false);
+  // Voucher discount config modal state
+  const [showDiscountConfigModal, setShowDiscountConfigModal] = useState(false);
+  const [configPercent, setConfigPercent] = useState('10'); // default
+  const [configAmount, setConfigAmount] = useState('100'); // default
+  const [configSaving, setConfigSaving] = useState(false);
 
   // Create Regional Admin Modal State
   const [showCreateAdminModal, setShowCreateAdminModal] = useState(false);
   const [adminName, setAdminName]         = useState('');
   const [adminEmail, setAdminEmail]       = useState('');
   const [adminPassword, setAdminPassword] = useState('');
-  const [adminRegion, setAdminRegion]     = useState('North District');
+  const [adminRegion, setAdminRegion]     = useState('Bengaluru Urban');
   const [customRegion, setCustomRegion]   = useState('');
   const [adminReason, setAdminReason]     = useState('');
   const [creatingAdmin, setCreatingAdmin] = useState(false);
@@ -93,9 +124,10 @@ function AdminDashboard({ user, token }) {
 
       if (isSuperAdmin) {
         promises.push(fetch('/api/admin/regional-admins', { headers }));
+        promises.push(fetch('/api/admin/voucher-config', { headers }));
       }
 
-      const [rRes, uRes, revRes, regAdminRes] = await Promise.all(promises);
+      const [rRes, uRes, revRes, regAdminRes, voucherConfigRes] = await Promise.all(promises);
 
       if (rRes.ok) {
         const rData = await rRes.json();
@@ -112,6 +144,13 @@ function AdminDashboard({ user, token }) {
       if (regAdminRes && regAdminRes.ok) {
         const regData = await regAdminRes.json();
         setRegionalAdmins(regData.regionalAdmins || []);
+      }
+      if (voucherConfigRes && voucherConfigRes.ok) {
+        const vData = await voucherConfigRes.json();
+        if (vData?.config) {
+          if (vData.config.percent !== undefined) setConfigPercent(String(vData.config.percent));
+          if (vData.config.amount !== undefined) setConfigAmount(String(vData.config.amount));
+        }
       }
     } catch (e) {
       showToast('Failed to load admin data', 'error');
@@ -217,7 +256,7 @@ function AdminDashboard({ user, token }) {
     ? reviews
     : reviews.filter(rev => {
         const targetRest = restaurants.find(r => r.id === rev.restaurantId || r._id === rev.restaurantId);
-        return targetRest && (targetRest.region || 'Downtown Metro').toLowerCase() === (isSuperAdmin ? selectedRegion : assignedRegion).toLowerCase();
+        return targetRest && (targetRest.region || 'Bengaluru Urban').toLowerCase() === (isSuperAdmin ? selectedRegion : assignedRegion).toLowerCase();
       });
 
   const pendingCount = restaurants.filter(r => r.status === 'pending' || r.isApproved === false).length;
@@ -313,13 +352,22 @@ function AdminDashboard({ user, token }) {
 
             {/* Create Regional Admin Button (Main Admin Only) */}
             {isSuperAdmin && (
-              <button
-                onClick={() => setShowCreateAdminModal(true)}
-                className="btn btn-primary btn-sm"
-                style={{ background: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)', gap: '6px' }}
-              >
-                <UserPlus size={15} /> Create Regional Admin
-              </button>
+              <>
+                <button
+                  onClick={() => setShowCreateAdminModal(true)}
+                  className="btn btn-primary btn-sm"
+                  style={{ background: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)', gap: '6px' }}
+                >
+                  <UserPlus size={15} /> Create Regional Admin
+                </button>
+                <button
+                  onClick={() => setShowDiscountConfigModal(true)}
+                  className="btn btn-primary btn-sm"
+                  style={{ background: 'linear-gradient(135deg, #34D399 0%, #10B981 100%)', gap: '6px', marginLeft: '8px' }}
+                >
+                  <Award size={15} /> Configure Voucher Discounts
+                </button>
+              </>
             )}
 
             <button className="btn btn-secondary btn-sm" onClick={fetchData} disabled={loading}>
@@ -421,7 +469,7 @@ function AdminDashboard({ user, token }) {
                           </td>
                           <td>
                             <span className="badge" style={{ background: 'rgba(139,92,246,0.15)', color: '#C084FC', fontSize: '0.72rem' }}>
-                              📍 {r.region || 'Downtown Metro'}
+                              📍 {r.region || 'Bengaluru Urban'}
                             </span>
                           </td>
                           <td>
@@ -543,7 +591,7 @@ function AdminDashboard({ user, token }) {
                         <span className="badge" style={{ background: 'rgba(255,179,0,0.15)', color: '#FFB300' }}>
                           <Clock size={10} /> Pending Regional Review
                         </span>
-                        <span className="badge badge-primary">📍 {r.region || 'Downtown Metro'}</span>
+                        <span className="badge badge-primary">📍 {r.region || 'Bengaluru Urban'}</span>
                       </div>
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                         📍 {r.address} (GPS: {r.location?.lat}, {r.location?.lng})
@@ -594,6 +642,13 @@ function AdminDashboard({ user, token }) {
                 style={{ background: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)', gap: '6px' }}
               >
                 <UserPlus size={14} /> New Regional Admin
+              </button>
+              <button
+                onClick={() => setShowDiscountConfigModal(true)}
+                className="btn btn-primary btn-sm"
+                style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', gap: '6px', marginLeft: '8px' }}
+              >
+                <Key size={14} /> Configure Voucher Discounts
               </button>
             </div>
 
@@ -980,6 +1035,73 @@ function AdminDashboard({ user, token }) {
                 style={{ flex: 1, fontWeight: 700 }}
               >
                 {actionSubmitting ? 'Processing...' : activeActionModal.type === 'delete' ? 'Confirm Deletion' : activeActionModal.type === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* MODAL: CONFIGURE VOUCHER DISCOUNTS (SUPER ADMIN ONLY)   */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {showDiscountConfigModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }}>
+          <div style={{
+            background: 'var(--bg-surface-elevated)',
+            border: '2px solid #10B981',
+            borderRadius: 'var(--radius-lg)',
+            width: '100%', maxWidth: '460px',
+            padding: '28px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+            animation: 'slideUp 0.25s ease-out',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Configure Voucher Discounts</h3>
+              <button onClick={() => setShowDiscountConfigModal(false)} className="btn-ghost" style={{ padding: '4px' }}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Maximum Discount Percentage (1‑50%)</label>
+              <input type="number" min={1} max={50} value={configPercent}
+                     onChange={e => setConfigPercent(e.target.value)}
+                     className="form-input" />
+            </div>
+            <div className="form-group" style={{ marginTop: '12px' }}>
+              <label className="form-label">Maximum Discount Amount (₹)</label>
+              <input type="number" min={0} value={configAmount}
+                     onChange={e => setConfigAmount(e.target.value)}
+                     className="form-input" />
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowDiscountConfigModal(false)}>
+                Cancel
+              </button>
+              <button className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #34D399 0%, #10B981 100%)' }}
+                      disabled={configSaving}
+                      onClick={async () => {
+                        setConfigSaving(true);
+                        try {
+                          const res = await fetch('/api/admin/voucher-config', {
+                            method: 'POST',
+                            headers,
+                            body: JSON.stringify({ percent: Number(configPercent), amount: Number(configAmount) })
+                          });
+                          const data = await res.json();
+                          if (!res.ok) throw new Error(data.error || 'Failed to save config');
+                          showToast('Voucher configuration saved', 'success');
+                          setShowDiscountConfigModal(false);
+                        } catch (e) {
+                          showToast(e.message, 'error');
+                        } finally {
+                          setConfigSaving(false);
+                        }
+                      }}>
+                {configSaving ? 'Saving...' : 'Save'}
               </button>
             </div>
           </div>

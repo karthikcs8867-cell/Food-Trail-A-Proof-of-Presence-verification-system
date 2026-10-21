@@ -4,7 +4,30 @@ import { authenticateToken, optionalAuth } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
 import { calculateHaversineDistance } from '../services/geoService.js';
 
+import { upload } from '../middleware/upload.js';
+
 const router = express.Router();
+
+/**
+ * POST /api/restaurants/upload - Upload an image (JPG or PNG) for cover or bill proof
+ */
+router.post('/upload', authenticateToken, upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Please upload a valid image file (JPG or PNG).' });
+    }
+    const imageUrl = `/uploads/${req.file.filename}`;
+    return res.json({
+      url: imageUrl,
+      filename: req.file.filename,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
+  } catch (err) {
+    console.error('[Upload error]', err);
+    return res.status(500).json({ error: 'Image upload failed.' });
+  }
+});
 
 /**
  * GET /api/restaurants - List & search restaurants with filtering
@@ -140,10 +163,11 @@ router.post('/', authenticateToken, requireRole('restaurant_owner'), (req, res) 
       lng,
       geofenceRadiusMeters = 200,
       cuisine = [],
-      priceRange = '$$',
+      priceRange = '₹₹',
       phone,
       email,
       coverImage,
+      billImage,
       photos = [],
       menuItems = [],
     } = req.body;
@@ -154,12 +178,19 @@ router.post('/', authenticateToken, requireRole('restaurant_owner'), (req, res) 
       });
     }
 
+    if (!billImage || !String(billImage).trim()) {
+      return res.status(400).json({
+        error: 'Restaurant bill/receipt upload is mandatory for verification. Please upload a clear photo of your official restaurant bill.',
+      });
+    }
+
     const newRestaurant = db.restaurants.create({
       ownerId: req.user._id,
       name: name.trim(),
       tagline: tagline || '',
       description: description || '',
       address: address.trim(),
+      taluk: req.body.taluk || '',
       location: {
         lat: parseFloat(lat),
         lng: parseFloat(lng),
@@ -167,10 +198,11 @@ router.post('/', authenticateToken, requireRole('restaurant_owner'), (req, res) 
       geofenceRadiusMeters: parseInt(geofenceRadiusMeters, 10) || 200,
       region: req.body.region || 'Downtown Metro',
       cuisine: Array.isArray(cuisine) ? cuisine : [cuisine],
-      priceRange,
+      priceRange: priceRange || 'As per menu',
       phone: phone || '',
       email: email || req.user.email,
       coverImage: coverImage || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80',
+      billImage: billImage || '',
       photos: photos.length > 0 ? photos : [coverImage || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80'],
       menuItems: menuItems.map((item, idx) => ({
         id: item.id || `m_${Date.now()}_${idx}`,
@@ -233,6 +265,7 @@ router.put('/:id', authenticateToken, requireRole('restaurant_owner'), (req, res
     if (tagline !== undefined) updates.tagline = tagline;
     if (description !== undefined) updates.description = description;
     if (address) updates.address = address.trim();
+    if (req.body.taluk !== undefined) updates.taluk = req.body.taluk;
     if (lat != null && lng != null) {
       updates.location = { lat: parseFloat(lat), lng: parseFloat(lng) };
     }
@@ -244,6 +277,7 @@ router.put('/:id', authenticateToken, requireRole('restaurant_owner'), (req, res
     if (phone !== undefined) updates.phone = phone;
     if (email !== undefined) updates.email = email;
     if (coverImage) updates.coverImage = coverImage;
+    if (req.body.billImage !== undefined) updates.billImage = req.body.billImage;
     if (photos) updates.photos = photos;
     if (menuItems) updates.menuItems = menuItems;
 

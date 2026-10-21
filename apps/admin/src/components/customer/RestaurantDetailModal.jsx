@@ -26,10 +26,35 @@ export default function RestaurantDetailModal({ restaurant, onClose, onWriteRevi
   if (!restaurant) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1000,
+        background: 'rgba(5, 8, 15, 0.85)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        padding: '24px 16px',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+      }}
+    >
       <div
         className="modal-card"
-        style={{ maxWidth: '780px', maxHeight: '92vh' }}
+        style={{
+          maxWidth: '780px',
+          width: '100%',
+          maxHeight: 'calc(100vh - 48px)',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          margin: 'auto',
+          position: 'relative',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Cover Hero Banner */}
@@ -70,10 +95,10 @@ export default function RestaurantDetailModal({ restaurant, onClose, onWriteRevi
                 </span>
               ))}
               <span className="badge" style={{ background: 'rgba(255, 179, 0, 0.2)', color: '#FFB300' }}>
-                {restaurant.priceRange || '$$'}
+                {restaurant.priceRange || '₹₹'}
               </span>
               <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10B981' }}>
-                📍 {restaurant.geofenceRadiusMeters || 200}m Geofenced
+                📍 {restaurant.geofenceRadiusMeters || 50}m Geofenced
               </span>
             </div>
             <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#FFF' }}>{restaurant.name}</h2>
@@ -293,7 +318,7 @@ export default function RestaurantDetailModal({ restaurant, onClose, onWriteRevi
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                           <span style={{ fontWeight: 700, fontSize: '0.92rem' }}>{item.name}</span>
-                          <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '0.92rem' }}>${item.price}</span>
+                          <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '0.92rem' }}>₹{item.price}</span>
                         </div>
                         <span className="badge" style={{ background: 'rgba(255,255,255,0.06)', fontSize: '0.68rem', margin: '4px 0' }}>
                           {item.category || 'Specialty'}
@@ -339,7 +364,7 @@ export default function RestaurantDetailModal({ restaurant, onClose, onWriteRevi
                   </div>
                   <div>
                     <span style={{ color: 'var(--text-dim)', display: 'block' }}>Geofence Radius</span>
-                    <span style={{ fontWeight: 600, color: '#10B981' }}>{restaurant.geofenceRadiusMeters || 200} meters</span>
+                    <span style={{ fontWeight: 600, color: '#10B981' }}>{restaurant.geofenceRadiusMeters || 50} meters</span>
                   </div>
                   <div>
                     <span style={{ color: 'var(--text-dim)', display: 'block' }}>Contact Phone</span>

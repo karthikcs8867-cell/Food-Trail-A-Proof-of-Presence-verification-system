@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
-  TrendingUp, Star, Users, Gift, CheckCircle2, DollarSign,
+  TrendingUp, Star, Users, Gift, CheckCircle2, IndianRupee,
   MapPin, Receipt, MessageSquare, Clock, ArrowUpRight
 } from 'lucide-react';
 import StarRating from '../common/StarRating';
@@ -109,11 +109,11 @@ export default function AnalyticsOverview({ onNavigateTab }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>EST. REVENUE IMPACT</span>
             <div style={{ padding: '8px', background: 'rgba(139, 92, 246, 0.15)', borderRadius: '8px' }}>
-              <DollarSign size={18} color="#8B5CF6" />
+              <IndianRupee size={18} color="#8B5CF6" />
             </div>
           </div>
           <div style={{ fontSize: '2rem', fontWeight: 900, color: '#FFF' }}>
-            ${kpis.estimatedRevenueImpact || 120}
+            ₹{kpis.estimatedRevenueImpact || 120}
           </div>
           <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: '4px' }}>
             Attributed to repeat voucher dining

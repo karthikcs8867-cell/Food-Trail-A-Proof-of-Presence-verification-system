@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import {
   TrendingUp, QrCode, Store, PlusCircle, ShieldCheck,
   CheckCircle, XCircle, RefreshCw, Sparkles, ExternalLink,
-  Star, Users, Gift, DollarSign, MapPin, Receipt,
+  Star, Users, Gift, IndianRupee, MapPin, Receipt,
   MessageSquare, Clock, ArrowUpRight, ChevronDown, ChevronUp,
-  Building2, ArrowRight
+  Building2, ArrowRight, UploadCloud, FileText, AlertTriangle
 } from 'lucide-react';
 import StarRating from '../common/StarRating';
 import VoucherRedemption from './VoucherRedemption';
@@ -31,6 +31,11 @@ export default function OwnerDashboard() {
   // UI toggles
   const [showAddBranch, setShowAddBranch] = useState(false);
   const [showVoucherTerminal, setShowVoucherTerminal] = useState(false);
+
+  // Bill upload for existing restaurant
+  const [uploadingBillForRestId, setUploadingBillForRestId] = useState(null);
+  const [activeUploadTargetId, setActiveUploadTargetId] = useState(null);
+  const billUploadInputRef = useRef(null);
 
   // Fetch analytics — optionally scoped to a single restaurant
   const fetchAnalytics = useCallback(async (restaurantId) => {
@@ -126,11 +131,80 @@ export default function OwnerDashboard() {
     }
   };
 
+  const handleTriggerBillUpload = (restId) => {
+    setActiveUploadTargetId(restId);
+    if (billUploadInputRef.current) {
+      billUploadInputRef.current.value = '';
+      billUploadInputRef.current.click();
+    }
+  };
+
+  const handleBillFileSelected = async (e) => {
+    const file = e.target.files?.[0];
+    const restId = activeUploadTargetId || selectedRestaurantId;
+    if (!file || !restId) return;
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['jpg', 'jpeg', 'png'].includes(ext) && !file.type.match(/^image\/(jpeg|png)$/)) {
+      showToast('Please upload an image in JPG or PNG format only.', 'error');
+      return;
+    }
+
+    setUploadingBillForRestId(restId);
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const uploadRes = await fetch('/api/restaurants/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+
+      let billUrl = '';
+      if (uploadRes.ok) {
+        const data = await uploadRes.json();
+        billUrl = data.url;
+      } else {
+        billUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      const updateRes = await fetch(`/api/restaurants/${restId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ billImage: billUrl }),
+      });
+
+      const updateData = await updateRes.json();
+      if (!updateRes.ok) {
+        throw new Error(updateData.error || 'Failed to update restaurant bill image.');
+      }
+
+      showToast('🎉 Restaurant bill uploaded successfully! Sent for verification.', 'success');
+      await fetchRestaurantsList();
+      if (selectedRestaurantId) {
+        await fetchAnalytics(selectedRestaurantId);
+      }
+    } catch (err) {
+      console.error('Error uploading bill:', err);
+      showToast(err.message || 'Failed to upload bill.', 'error');
+    } finally {
+      setUploadingBillForRestId(null);
+      setActiveUploadTargetId(null);
+      if (e.target) e.target.value = '';
+    }
+  };
+
   const handleBranchRegistered = (newRestaurant) => {
     showToast('New outlet registered! Switching to it now…', 'success');
     setShowAddBranch(false);
     fetchRestaurantsList().then(() => {
-      // Auto-switch to newly registered restaurant
       if (newRestaurant?._id) {
         setSelectedRestaurantId(newRestaurant._id);
       }
@@ -147,6 +221,14 @@ export default function OwnerDashboard() {
 
   return (
     <div className="container" style={{ padding: '36px 24px 80px' }}>
+      {/* Hidden file input for uploading bills for existing restaurants */}
+      <input
+        type="file"
+        ref={billUploadInputRef}
+        accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+        style={{ display: 'none' }}
+        onChange={handleBillFileSelected}
+      />
       {/* ═══════════════════════════════════════════════════════ */}
       {/* TOP WELCOME BANNER                                     */}
       {/* ═══════════════════════════════════════════════════════ */}
@@ -198,10 +280,9 @@ export default function OwnerDashboard() {
       {allRestaurants.length > 0 && (
         <div style={{
           display: 'flex',
+          flexWrap: 'wrap',
           gap: '10px',
           marginBottom: '24px',
-          overflowX: 'auto',
-          paddingBottom: '4px',
         }}>
           {allRestaurants.map((rest) => {
             const isSelected = rest._id === selectedRestaurantId;
@@ -246,7 +327,7 @@ export default function OwnerDashboard() {
                   }}>
                     {rest.name}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', flexWrap: 'wrap' }}>
                     {rest.isApproved ? (
                       <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '3px' }}>
                         <CheckCircle size={10} /> Approved
@@ -254,6 +335,15 @@ export default function OwnerDashboard() {
                     ) : (
                       <span style={{ fontSize: '0.7rem', color: '#FFB300', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '3px' }}>
                         <Clock size={10} /> Pending
+                      </span>
+                    )}
+                    {rest.billImage ? (
+                      <span style={{ fontSize: '0.68rem', color: '#10B981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                        • Bill ✓
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.68rem', color: '#EF4444', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                        • Bill ⚠️
                       </span>
                     )}
                     {rest.cuisine && (
@@ -288,7 +378,7 @@ export default function OwnerDashboard() {
       {/* REGISTER NEW OUTLET (collapsible panel)               */}
       {/* ═══════════════════════════════════════════════════════ */}
       {showAddBranch && (
-        <div style={{
+        <div id="register-outlet-section" style={{
           marginBottom: '28px',
           animation: 'slideUp 0.25s ease-out',
           background: 'linear-gradient(135deg, rgba(255,90,54,0.04) 0%, rgba(255,179,0,0.02) 100%)',
@@ -321,7 +411,7 @@ export default function OwnerDashboard() {
       {/* VOUCHER REDEMPTION TERMINAL (collapsible)              */}
       {/* ═══════════════════════════════════════════════════════ */}
       {showVoucherTerminal && (
-        <div style={{ marginBottom: '32px', animation: 'slideUp 0.25s ease-out' }}>
+        <div className="voucher-terminal-panel" style={{ marginBottom: '32px', animation: 'slideUp 0.25s ease-out' }}>
           <VoucherRedemption />
         </div>
       )}
@@ -332,31 +422,139 @@ export default function OwnerDashboard() {
       {selectedRestaurant && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: '14px',
-          padding: '16px 20px', marginBottom: '24px',
+          padding: '16px 20px', marginBottom: selectedRestaurant.billImage ? '24px' : '14px',
           background: 'var(--bg-surface)', borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--border-subtle)',
+          flexWrap: 'wrap',
         }}>
           <div style={{
             width: '44px', height: '44px', borderRadius: '12px',
             background: 'linear-gradient(135deg, #FF5A36 0%, #FFB300 100%)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1.3rem',
+            fontSize: '1.3rem', flexShrink: 0,
           }}>
             🏪
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ flex: 1, minWidth: '220px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <h2 style={{ fontSize: '1.3rem', fontWeight: 900, margin: 0 }}>{selectedRestaurant.name}</h2>
               {selectedRestaurant.isApproved ? (
                 <span className="badge badge-success" style={{ fontSize: '0.7rem' }}><CheckCircle size={10} /> Live</span>
               ) : (
                 <span className="badge" style={{ background: 'rgba(255,179,0,0.15)', color: '#FFB300', fontSize: '0.7rem' }}><Clock size={10} /> Pending Approval</span>
               )}
+              {selectedRestaurant.billImage ? (
+                <a
+                  href={selectedRestaurant.billImage}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="badge"
+                  style={{
+                    background: 'rgba(16,185,129,0.15)', color: '#10B981', fontSize: '0.7rem',
+                    textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer'
+                  }}
+                  title="View uploaded verification bill"
+                >
+                  <FileText size={10} /> Bill Uploaded
+                </a>
+              ) : (
+                <span
+                  className="badge"
+                  style={{
+                    background: 'rgba(239,68,68,0.15)', color: '#EF4444', fontSize: '0.7rem',
+                    display: 'inline-flex', alignItems: 'center', gap: '4px'
+                  }}
+                >
+                  <AlertTriangle size={10} /> Bill Missing
+                </span>
+              )}
             </div>
             <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '2px' }}>
               📍 {selectedRestaurant.address} • {selectedRestaurant.cuisine?.join(', ')} • {selectedRestaurant.priceRange}
             </div>
           </div>
+          {!selectedRestaurant.billImage && (
+            <button
+              id="btn-quick-upload-bill"
+              onClick={() => handleTriggerBillUpload(selectedRestaurant._id)}
+              disabled={uploadingBillForRestId === selectedRestaurant._id}
+              className="btn btn-sm"
+              style={{
+                background: 'linear-gradient(135deg, #FF5A36, #FF8C00)',
+                color: '#FFF',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                padding: '8px 16px',
+                border: 'none',
+                borderRadius: '8px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 4px 12px rgba(255, 90, 54, 0.35)',
+                cursor: 'pointer',
+              }}
+            >
+              <UploadCloud size={15} />
+              {uploadingBillForRestId === selectedRestaurant._id ? 'Uploading Bill…' : 'Upload Bill for Verification'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Bill missing warning banner if current restaurant has no bill */}
+      {selectedRestaurant && !selectedRestaurant.billImage && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px',
+          padding: '16px 20px',
+          marginBottom: '24px',
+          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(255, 90, 54, 0.12) 100%)',
+          border: '1px solid rgba(239, 68, 68, 0.35)',
+          borderRadius: 'var(--radius-lg)',
+          animation: 'fadeIn 0.3s ease-in-out',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: '260px' }}>
+            <div style={{
+              width: '42px', height: '42px', borderRadius: '10px',
+              background: 'rgba(239, 68, 68, 0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#EF4444', flexShrink: 0,
+            }}>
+              <AlertTriangle size={22} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.96rem', color: '#FFF', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>Official Restaurant Bill Required for Verification</span>
+                <span className="badge badge-danger" style={{ fontSize: '0.65rem' }}>ACTION REQUIRED</span>
+              </div>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '3px' }}>
+                This outlet was registered without an official bill image. Upload a clear printed restaurant bill / receipt so admin can verify and activate your restaurant on FoodTrail.
+              </div>
+            </div>
+          </div>
+          <button
+            id="btn-upload-missing-bill-banner"
+            onClick={() => handleTriggerBillUpload(selectedRestaurant._id)}
+            disabled={uploadingBillForRestId === selectedRestaurant._id}
+            className="btn btn-primary"
+            style={{
+              padding: '10px 18px',
+              fontSize: '0.88rem',
+              fontWeight: 800,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 16px rgba(255, 90, 54, 0.4)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <UploadCloud size={16} />
+            {uploadingBillForRestId === selectedRestaurant._id ? 'Uploading Bill…' : 'Upload Bill for Verification'}
+          </button>
         </div>
       )}
 
@@ -435,11 +633,11 @@ export default function OwnerDashboard() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>EST. REVENUE IMPACT</span>
                 <div style={{ padding: '8px', background: 'rgba(139, 92, 246, 0.15)', borderRadius: '8px' }}>
-                  <DollarSign size={18} color="#8B5CF6" />
+                  <IndianRupee size={18} color="#8B5CF6" />
                 </div>
               </div>
               <div style={{ fontSize: '2rem', fontWeight: 900, color: '#FFF' }}>
-                ${kpis.estimatedRevenueImpact || 0}
+                ₹{kpis.estimatedRevenueImpact || 0}
               </div>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: '4px' }}>
                 Attributed to repeat voucher dining
@@ -662,7 +860,7 @@ export default function OwnerDashboard() {
                       }}
                     >
                       <div style={{ flex: 1, minWidth: '200px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
                           <span style={{ fontWeight: 800, fontSize: '1rem', color: '#FFF' }}>{rest.name}</span>
                           {isCurrent && (
                             <span className="badge" style={{ background: 'rgba(255,90,54,0.15)', color: '#FF5A36', fontSize: '0.65rem' }}>
@@ -678,6 +876,15 @@ export default function OwnerDashboard() {
                               <Clock size={10} /> Pending Review
                             </span>
                           )}
+                          {rest.billImage ? (
+                            <span className="badge" style={{ background: 'rgba(16,185,129,0.12)', color: '#10B981', fontSize: '0.68rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              <CheckCircle size={9} /> Bill Attached
+                            </span>
+                          ) : (
+                            <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444', fontSize: '0.68rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              <AlertTriangle size={9} /> Bill Missing
+                            </span>
+                          )}
                         </div>
                         <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                           📍 {rest.address}
@@ -687,7 +894,47 @@ export default function OwnerDashboard() {
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        {!rest.billImage ? (
+                          <button
+                            type="button"
+                            className="btn btn-sm"
+                            style={{
+                              background: 'linear-gradient(135deg, #FF5A36, #FF8C00)',
+                              color: '#FFF',
+                              fontWeight: 700,
+                              fontSize: '0.78rem',
+                              padding: '7px 13px',
+                              border: 'none',
+                              borderRadius: '8px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              boxShadow: '0 2px 8px rgba(255,90,54,0.3)',
+                              cursor: 'pointer',
+                            }}
+                            disabled={uploadingBillForRestId === rest._id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTriggerBillUpload(rest._id);
+                            }}
+                          >
+                            <UploadCloud size={13} />
+                            {uploadingBillForRestId === rest._id ? 'Uploading…' : 'Upload Bill for Verification'}
+                          </button>
+                        ) : (
+                          <a
+                            href={rest.billImage}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="btn btn-ghost btn-sm"
+                            style={{ fontSize: '0.78rem', color: '#10B981', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <FileText size={12} /> View Bill
+                          </a>
+                        )}
+
                         {rest.isApproved ? (
                           <div style={{
                             display: 'flex', alignItems: 'center', gap: '6px',

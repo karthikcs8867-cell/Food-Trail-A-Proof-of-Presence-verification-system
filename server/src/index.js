@@ -76,3 +76,5 @@ app.listen(PORT, async () => {
     console.error('[Startup] Seeding error:', seedErr);
   }
 });
+
+// Server running with Karnataka districts configuration

@@ -1,27 +1,26 @@
 [
   {
-    "restaurantId": "ft_69f634800817b42f",
-    "restaurantName": "Trattoria Roma - Main Branch",
-    "restaurantRegion": "Downtown Metro",
-    "userId": "ft_51e8ec1c733609ba",
-    "userName": "karthik",
-    "userAvatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+    "restaurantId": "ft_b449d40f5e405e2c",
+    "restaurantName": "Mycem",
+    "userId": "ft_e399d0752224d198",
+    "userName": "Test Customer",
     "rating": 5,
-    "comment": "Incredible hand-made pasta and warm hospitality! Authentic woodfired crust and fresh basil flavors.",
+    "comment": "Delicious food, verified at restaurant within 50m radius!",
     "photos": [],
     "verificationType": "live_location",
     "verificationDetails": {
       "userLocation": {
-        "lat": 12.9716,
-        "lng": 77.5946
+        "lat": 12.9721,
+        "lng": 77.595
       },
-      "distanceMeters": 12,
+      "distanceMeters": 11.1,
       "isProximityVerified": true,
-      "verifiedAt": "2026-08-28T12:10:00.000Z"
+      "verifiedAt": "2026-10-15T14:16:33.512Z"
     },
-    "_id": "ft_rev_init_01",
-    "id": "ft_rev_init_01",
-    "createdAt": "2026-08-28T12:10:00.000Z",
-    "updatedAt": "2026-08-28T12:10:00.000Z"
+    "_id": "ft_23130627f24137dd",
+    "id": "ft_23130627f24137dd",
+    "createdAt": "2026-10-15T14:16:33.512Z",
+    "updatedAt": "2026-10-15T14:16:33.515Z",
+    "voucherIssuedId": "ft_d5a77de12d28872b"
   }
 ]

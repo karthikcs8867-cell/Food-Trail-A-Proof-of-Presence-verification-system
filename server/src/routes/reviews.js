@@ -25,8 +25,12 @@ router.post('/verify-location', authenticateToken, (req, res) => {
       return res.status(404).json({ error: 'Restaurant not found.' });
     }
 
-    const radius = restaurant.geofenceRadiusMeters || 200;
-    const result = verifyProximity(userLat, userLng, restaurant.location.lat, restaurant.location.lng, radius);
+    if (!restaurant.location || restaurant.location.lat == null || restaurant.location.lng == null) {
+      return res.status(400).json({ error: 'Restaurant does not have registered GPS coordinates.' });
+    }
+
+    const radius = Number(restaurant.geofenceRadiusMeters) || 200;
+    const result = verifyProximity(userLat, userLng, restaurant.location.lat, restaurant.location.lng, radius, 0);
 
     return res.json({
       restaurant: {
@@ -110,12 +114,16 @@ router.post('/', authenticateToken, requireRole('customer'), async (req, res) =>
         return res.status(400).json({ error: 'User GPS coordinates required for live location verification.' });
       }
 
-      const radius = restaurant.geofenceRadiusMeters || 200;
-      const geoCheck = verifyProximity(userLocation.lat, userLocation.lng, restaurant.location.lat, restaurant.location.lng, radius);
+      if (!restaurant.location || restaurant.location.lat == null || restaurant.location.lng == null) {
+        return res.status(400).json({ error: 'Target restaurant does not have registered GPS coordinates.' });
+      }
+
+      const radius = Number(restaurant.geofenceRadiusMeters) || 200;
+      const geoCheck = verifyProximity(userLocation.lat, userLocation.lng, restaurant.location.lat, restaurant.location.lng, radius, 0);
 
       if (!geoCheck.isWithinRadius) {
         return res.status(400).json({
-          error: `Proximity verification failed: You are ${geoCheck.distanceMeters}m away (maximum allowed radius is ${radius}m).`,
+          error: `Proximity verification failed: You are ${geoCheck.distanceMeters}m away from the restaurant. Reviews by live location can only be submitted when you are physically at the registered restaurant location (within ${radius}m radius).`,
           geoCheck,
         });
       }

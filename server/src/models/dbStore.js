@@ -147,6 +147,7 @@ class DbStore {
     this.restaurants = new Collection('restaurants', this.dataDir);
     this.reviews = new Collection('reviews', this.dataDir);
     this.vouchers = new Collection('vouchers', this.dataDir);
+    this.voucherConfigs = new Collection('voucherConfigs', this.dataDir);
   }
 }
 

@@ -41,14 +41,32 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+html {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  scroll-behavior: smooth !important;
+  overscroll-behavior-x: none !important;
+}
+
 body {
   font-family: var(--font-body);
   background-color: var(--bg-main);
   color: var(--text-main);
   min-height: 100vh;
   line-height: 1.6;
-  overflow-x: hidden;
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  position: relative !important;
+  overscroll-behavior-x: none !important;
   -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+  width: 100% !important;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -157,12 +175,18 @@ h1, h2, h3, h4, h5, h6 {
 .modal-overlay {
   position: fixed; inset: 0; z-index: 1000;
   background: rgba(5, 8, 15, 0.85); backdrop-filter: blur(8px);
-  display: flex; align-items: center; justify-content: center; padding: 24px;
+  -webkit-backdrop-filter: blur(8px);
+  display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px;
+  overflow-y: auto !important; overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
 }
-.modal {
-  background: var(--bg-surface); border: 1px solid var(--border-medium);
+.modal, .modal-card {
+  background: var(--bg-surface-elevated); border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
-  width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;
+  width: 100%; max-width: 680px; max-height: calc(100vh - 48px);
+  overflow-y: auto !important; overflow-x: hidden !important;
+  position: relative; margin: auto;
+  -webkit-overflow-scrolling: touch; scroll-behavior: smooth;
 }
 
 /* ── Scrollbar ── */

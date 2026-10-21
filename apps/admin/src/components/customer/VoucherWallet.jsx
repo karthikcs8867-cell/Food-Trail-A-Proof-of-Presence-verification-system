@@ -50,10 +50,36 @@ export default function VoucherWallet({ isOpen, onClose }) {
   const currentList = vouchersData[activeTab] || [];
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1000,
+        background: 'rgba(5, 8, 15, 0.85)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        padding: '24px 16px',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+      }}
+    >
       <div
         className="modal-card"
-        style={{ maxWidth: '720px', padding: '28px', minHeight: '520px' }}
+        style={{
+          maxWidth: '720px',
+          width: '100%',
+          maxHeight: 'calc(100vh - 48px)',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '28px',
+          margin: 'auto',
+          position: 'relative',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

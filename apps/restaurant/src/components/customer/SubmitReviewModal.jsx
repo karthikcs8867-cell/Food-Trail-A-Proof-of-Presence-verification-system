@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -35,10 +35,13 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
   const [receiptPreview, setReceiptPreview] = useState('');
   const [ocrScanning, setOcrScanning] = useState(false);
   const [ocrResult, setOcrResult] = useState(null);
+  const [billError, setBillError] = useState(null);
 
   // Submission / Reward States
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const [issuedVoucher, setIssuedVoucher] = useState(null);
+  const modalContentRef = useRef(null);
 
   useEffect(() => {
     async function loadRestaurants() {
@@ -56,6 +59,9 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
     }
     if (isOpen) {
       loadRestaurants();
+      if (modalContentRef.current) {
+        modalContentRef.current.scrollTop = 0;
+      }
     }
   }, [isOpen]);
 
@@ -66,40 +72,42 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
     }
   }, [initialRestaurant]);
 
+  useEffect(() => {
+    setSubmitError(null);
+  }, [reviewMode]);
+
   const handleRestaurantSelect = (id) => {
     setSelectedRestId(id);
     const rest = restaurants.find(r => r._id === id);
     setSelectedRest(rest);
     // Reset checks
     setGeoCheckResult(null);
+    setUserCoords(null);
+    setGeoError(null);
+    setReceiptFile(null);
+    setReceiptPreview('');
     setOcrResult(null);
+    setBillError(null);
+    setSubmitError(null);
   };
 
   // --- 1. Live Location Verification Logic ---
-  const handleGetLocation = (simulate = false) => {
+  const handleGetLocation = () => {
     if (!selectedRest) {
       showToast('Please select a restaurant first', 'error');
+      return;
+    }
+
+    if (!selectedRest.location?.lat || !selectedRest.location?.lng) {
+      setGeoError('This restaurant does not have registered GPS coordinates.');
       return;
     }
 
     setLocating(true);
     setGeoError(null);
 
-    if (simulate) {
-      // Simulate sitting right at the table (with a tiny 5-meter realistic variation)
-      const rLat = selectedRest.location.lat;
-      const rLng = selectedRest.location.lng;
-      const simCoords = {
-        lat: rLat + (Math.random() - 0.5) * 0.0001,
-        lng: rLng + (Math.random() - 0.5) * 0.0001,
-      };
-      setUserCoords(simCoords);
-      verifyProximityWithBackend(simCoords.lat, simCoords.lng);
-      return;
-    }
-
     if (!navigator.geolocation) {
-      setGeoError('Geolocation is not supported by your browser. You can use the "Simulate At Restaurant" option to test.');
+      setGeoError('Geolocation is not supported by your browser. Please enable device location services.');
       setLocating(false);
       return;
     }
@@ -115,10 +123,21 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
       },
       (err) => {
         console.warn('Geolocation error:', err);
-        setGeoError(`Location access error: ${err.message}. Click "Simulate At Location" to test verification.`);
+        let errorMsg = 'Unable to access your live location.';
+        if (err.code === 1) {
+          errorMsg = 'Location access denied. Please allow location permissions in your browser to verify physical presence at the restaurant.';
+        } else if (err.code === 2) {
+          errorMsg = 'Location unavailable. Please check that device GPS/location is turned on.';
+        } else if (err.code === 3) {
+          errorMsg = 'Location request timed out. Please try again.';
+        } else if (err.message) {
+          errorMsg = `Location access error: ${err.message}`;
+        }
+        setGeoError(errorMsg);
+        showToast(errorMsg, 'error');
         setLocating(false);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   };
 
@@ -137,14 +156,20 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to verify location with server.');
+      }
       setGeoCheckResult(data.verification);
+      const effectiveRadius = data.restaurant?.geofenceRadiusMeters || selectedRest.geofenceRadiusMeters || 200;
       if (data.verification?.isWithinRadius) {
-        showToast(`📍 Proximity verified! (${Math.round(data.verification.distanceMeters)}m from restaurant)`, 'success');
+        showToast(`📍 Location verified! You are at ${selectedRest.name} (${Math.round(data.verification.distanceMeters)}m from registered location).`, 'success');
       } else {
-        showToast(`Outside geofence radius (${Math.round(data.verification.distanceMeters)}m away). Use simulation to test.`, 'error');
+        const dist = Math.round(data.verification?.distanceMeters || 0);
+        showToast(`Proximity check failed: You are ${dist}m away from ${selectedRest.name}. You must be physically at the registered restaurant location (within ${effectiveRadius}m) to submit.`, 'error');
       }
     } catch (e) {
-      setGeoError('Failed to verify location with server.');
+      setGeoError(e.message || 'Failed to verify location with server.');
+      setGeoCheckResult(null);
     } finally {
       setLocating(false);
     }
@@ -164,6 +189,8 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
     setReceiptPreview(URL.createObjectURL(file));
     setOcrScanning(true);
     setOcrResult(null);
+    setBillError(null);
+    setSubmitError(null);
 
     const formData = new FormData();
     formData.append('receiptImage', file);
@@ -176,12 +203,26 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
         body: formData,
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Receipt scan failed');
+      if (!res.ok) throw new Error(data.error || 'The bill is invalid.');
+
+      if (data.ocrResult && data.ocrResult.isBillVerified === false) {
+        const invalidMsg = `The bill is invalid. The uploaded receipt could not be verified for ${selectedRest.name}.`;
+        setBillError(invalidMsg);
+        showToast('⚠️ The bill is invalid. Please upload a valid dining receipt.', 'error');
+        setOcrResult(null);
+        return;
+      }
 
       setOcrResult(data);
+      setBillError(null);
       showToast('🧾 Bill receipt verified successfully!', 'success');
     } catch (err) {
-      showToast(err.message || 'Receipt analysis failed', 'error');
+      const errText = err.message?.includes('bill is invalid')
+        ? 'The bill is invalid. Please upload a valid dining receipt.'
+        : (err.message || 'The bill is invalid.');
+      setBillError(errText);
+      showToast(`⚠️ ${errText}`, 'error');
+      setOcrResult(null);
     } finally {
       setOcrScanning(false);
     }
@@ -190,23 +231,53 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
   // --- 3. Final Submission & Voucher Issuance ---
   const handleSubmitReview = async (e) => {
     e.preventDefault();
+    setSubmitError(null);
+
     if (!selectedRest) {
-      showToast('Please select a restaurant', 'error');
+      const msg = 'Please select a restaurant first.';
+      setSubmitError(msg);
+      showToast(msg, 'error');
       return;
     }
 
-    if (reviewMode === 'live_location' && (!geoCheckResult || !geoCheckResult.isWithinRadius)) {
-      showToast('Please complete live location proximity verification before submitting.', 'error');
-      return;
+    // 1. Live location mode validation
+    if (reviewMode === 'live_location') {
+      if (!userCoords || !geoCheckResult) {
+        const msg = 'You are not in the restaurant location. Please click "Access Live Location" to verify your dining location.';
+        setSubmitError(msg);
+        showToast(`⚠️ ${msg}`, 'error');
+        return;
+      }
+      if (!geoCheckResult.isWithinRadius) {
+        const distance = Math.round(geoCheckResult.distanceMeters || 0);
+        const msg = `You are not in the restaurant location. You are currently ${distance}m away from ${selectedRest.name}. Reviews by live location can only be submitted when physically at the restaurant.`;
+        setSubmitError(msg);
+        showToast(`⚠️ ${msg}`, 'error');
+        return;
+      }
     }
 
-    if (reviewMode === 'bill_proof' && !ocrResult) {
-      showToast('Please upload a bill receipt image for OCR verification first.', 'error');
-      return;
+    // 2. Bill proof mode validation
+    if (reviewMode === 'bill_proof') {
+      if (!receiptFile || !ocrResult) {
+        const msg = 'The bill is invalid. Please upload a valid restaurant dining receipt before submitting.';
+        setSubmitError(msg);
+        showToast(`⚠️ ${msg}`, 'error');
+        return;
+      }
+      if (ocrResult.ocrResult && ocrResult.ocrResult.isBillVerified === false) {
+        const msg = `The bill is invalid. The uploaded receipt could not be verified for ${selectedRest.name}.`;
+        setSubmitError(msg);
+        showToast(`⚠️ ${msg}`, 'error');
+        return;
+      }
     }
 
+    // 3. Review comment validation
     if (!comment.trim()) {
-      showToast('Please enter your review feedback comment.', 'error');
+      const msg = 'Please enter your review feedback comment.';
+      setSubmitError(msg);
+      showToast(msg, 'error');
       return;
     }
 
@@ -264,10 +335,37 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1000,
+        background: 'rgba(5, 8, 15, 0.85)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        padding: '24px 16px',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+      }}
+    >
       <div
+        ref={modalContentRef}
         className="modal-card"
-        style={{ maxWidth: '640px', padding: '28px' }}
+        style={{
+          maxWidth: '660px',
+          width: '100%',
+          maxHeight: 'calc(100vh - 48px)',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '28px',
+          margin: 'auto',
+          position: 'relative',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Success / Reward Voucher Celebration View */}
@@ -445,52 +543,92 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '10px',
+                    justifyContent: 'space-between',
+                    gap: '12px',
                     background: 'rgba(16, 185, 129, 0.15)',
                     border: '1px solid #10B981',
                     borderRadius: '10px',
-                    padding: '12px',
+                    padding: '14px',
                     color: '#6EE7B7',
                     fontSize: '0.88rem',
                   }}>
-                    <CheckCircle2 size={22} color="#10B981" />
-                    <div>
-                      <div style={{ fontWeight: 700, color: '#FFF' }}>Location Proximity Verified!</div>
-                      <div style={{ fontSize: '0.78rem' }}>
-                        You are {Math.round(geoCheckResult.distanceMeters)}m from {selectedRest?.name}. Ready to submit!
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <CheckCircle2 size={24} color="#10B981" style={{ flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 700, color: '#FFF' }}>At Restaurant Location – Verified!</div>
+                        <div style={{ fontSize: '0.78rem', color: '#A7F3D0', marginTop: '2px' }}>
+                          You are {Math.round(geoCheckResult.distanceMeters)}m from {selectedRest?.name} (within registered {selectedRest?.geofenceRadiusMeters || 200}m radius). Ready to submit!
+                        </div>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={handleGetLocation}
+                      disabled={locating}
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.75rem', gap: '4px' }}
+                      title="Re-verify your live location"
+                    >
+                      <RefreshCw size={12} className={locating ? 'pulse-radar' : ''} />
+                      Refresh
+                    </button>
                   </div>
                 ) : (
                   <div>
-                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                      Verify you are physically dining at <strong>{selectedRest?.name}</strong> using your browser's GPS or click simulate.
+                    <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginBottom: '14px', lineHeight: 1.5 }}>
+                      Verify you are physically dining at <strong>{selectedRest?.name}</strong> at its registered location. Click below to access your live GPS coordinates.
                     </p>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button
-                        type="button"
-                        onClick={() => handleGetLocation(false)}
-                        disabled={locating}
-                        className="btn btn-secondary btn-sm"
-                      >
-                        {locating ? <RefreshCw className="pulse-radar" size={14} /> : <MapPin size={14} />}
-                        Detect My GPS Location
-                      </button>
 
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                       <button
                         type="button"
-                        onClick={() => handleGetLocation(true)}
+                        onClick={handleGetLocation}
                         disabled={locating}
-                        className="btn btn-success btn-sm"
-                        title="Simulate being at the restaurant coordinates for testing"
+                        className="btn btn-primary btn-sm"
+                        style={{ gap: '8px', padding: '10px 18px', fontWeight: 700 }}
                       >
-                        <Sparkles size={14} /> Simulate At Restaurant (Demo)
+                        {locating ? <RefreshCw className="pulse-radar" size={15} /> : <MapPin size={15} />}
+                        {locating ? 'Accessing Live Location...' : 'Access Live Location'}
                       </button>
                     </div>
 
+                    {geoCheckResult && !geoCheckResult.isWithinRadius && (
+                      <div style={{
+                        marginTop: '14px',
+                        background: 'rgba(239, 68, 68, 0.12)',
+                        border: '1px solid #EF4444',
+                        borderRadius: '10px',
+                        padding: '12px',
+                        color: '#FCA5A5',
+                        fontSize: '0.84rem',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '10px',
+                      }}>
+                        <AlertCircle size={20} color="#EF4444" style={{ flexShrink: 0, marginTop: '2px' }} />
+                        <div>
+                          <div style={{ fontWeight: 700, color: '#FFF' }}>Outside Restaurant Location</div>
+                          <div style={{ fontSize: '0.78rem', marginTop: '3px', lineHeight: 1.4 }}>
+                            You are <strong>{Math.round(geoCheckResult.distanceMeters)}m</strong> away from {selectedRest?.name}. Reviews by live location can only be submitted when you are physically at the registered restaurant location (within {selectedRest?.geofenceRadiusMeters || 200}m radius).
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {geoError && (
-                      <div style={{ color: '#EF4444', fontSize: '0.78rem', marginTop: '8px', display: 'flex', gap: '6px' }}>
-                        <AlertCircle size={14} />
+                      <div style={{
+                        marginTop: '12px',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '8px',
+                        padding: '10px 12px',
+                        color: '#EF4444',
+                        fontSize: '0.8rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}>
+                        <AlertCircle size={16} style={{ flexShrink: 0 }} />
                         <span>{geoError}</span>
                       </div>
                     )}
@@ -582,12 +720,30 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
                     </div>
                     <button
                       type="button"
-                      onClick={() => { setOcrResult(null); setReceiptFile(null); }}
+                      onClick={() => { setOcrResult(null); setReceiptFile(null); setBillError(null); }}
                       className="btn btn-ghost btn-sm"
                       style={{ fontSize: '0.75rem' }}
                     >
                       Change Photo
                     </button>
+                  </div>
+                )}
+
+                {billError && (
+                  <div style={{
+                    marginTop: '12px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    color: '#EF4444',
+                    fontSize: '0.82rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}>
+                    <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                    <span>{billError}</span>
                   </div>
                 )}
               </div>
@@ -632,14 +788,66 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={submitting || (reviewMode === 'live_location' && !geoCheckResult?.isWithinRadius) || (reviewMode === 'bill_proof' && !ocrResult)}
-                className="btn btn-primary btn-lg"
-                style={{ width: '100%', marginTop: '10px' }}
-              >
-                {submitting ? 'Submitting & Issuing Voucher...' : '✨ Submit Review & Claim Gift Voucher'}
-              </button>
+              {/* Submission Warning Display */}
+              {submitError && (
+                <div style={{
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid #EF4444',
+                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  marginTop: '16px',
+                  color: '#FCA5A5',
+                  fontSize: '0.85rem',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  animation: 'fadeIn 0.2s ease-in-out',
+                }}>
+                  <AlertCircle size={18} color="#EF4444" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#FFF' }}>Submission Warning</div>
+                    <div style={{ fontSize: '0.82rem', marginTop: '2px', lineHeight: 1.4 }}>{submitError}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Form Action Buttons: Cancellation & Submit */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 2fr',
+                gap: '12px',
+                marginTop: '18px',
+              }}>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="btn btn-secondary btn-lg"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    fontWeight: 700,
+                  }}
+                >
+                  <X size={18} /> Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn btn-primary btn-lg"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    fontWeight: 700,
+                  }}
+                >
+                  {submitting ? 'Submitting & Issuing Voucher...' : '✨ Submit Review & Claim Gift Voucher'}
+                </button>
+              </div>
             </form>
           </div>
         )}

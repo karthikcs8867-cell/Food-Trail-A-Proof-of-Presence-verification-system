@@ -306,8 +306,8 @@ export default function CustomerHome({
           {/* Cuisine Filter Pills */}
           <div style={{
             display: 'flex',
+            flexWrap: 'wrap',
             gap: '8px',
-            overflowX: 'auto',
             paddingBottom: '4px',
           }}>
             {cuisines.map((c) => (
@@ -435,7 +435,7 @@ export default function CustomerHome({
                       </span>
                     ) : (
                       <span className="badge" style={{ background: 'rgba(0,0,0,0.6)', color: '#FFF' }}>
-                        {rest.priceRange || '$$'}
+                        {rest.priceRange || '₹₹'}
                       </span>
                     )}
                   </div>

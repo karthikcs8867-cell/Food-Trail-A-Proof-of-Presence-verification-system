@@ -276,4 +276,66 @@ router.delete('/restaurants/:id', (req, res) => {
   }
 });
 
+/**
+ * GET /api/admin/voucher-config - Retrieve voucher discount limits (Admin only)
+ */
+router.get('/voucher-config', (req, res) => {
+  try {
+    const config = db.voucherConfigs.findOne() || { maxPercent: 10, maxAmount: 100 };
+    return res.json({
+      config: {
+        percent: config.maxPercent || 10,
+        amount: config.maxAmount || 100,
+        maxPercent: config.maxPercent || 10,
+        maxAmount: config.maxAmount || 100,
+      }
+    });
+  } catch (err) {
+    console.error('[Admin] Get voucher config error:', err);
+    return res.status(500).json({ error: 'Failed to fetch voucher configuration' });
+  }
+});
+
+/**
+ * POST /api/admin/voucher-config - Save voucher discount limits (Super Admin only)
+ */
+router.post('/voucher-config', (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only the Super Admin can configure voucher discounts.' });
+    }
+
+    const { percent, amount, maxPercent, maxAmount } = req.body;
+    const finalPercent = Math.min(Math.max(Number(percent ?? maxPercent) || 10, 1), 50);
+    const finalAmount = Math.max(Number(amount ?? maxAmount) || 0, 0);
+
+    const existing = db.voucherConfigs.findOne();
+    let updated;
+    if (existing) {
+      updated = db.voucherConfigs.findByIdAndUpdate(existing._id, {
+        maxPercent: finalPercent,
+        maxAmount: finalAmount,
+      });
+    } else {
+      updated = db.voucherConfigs.create({
+        maxPercent: finalPercent,
+        maxAmount: finalAmount,
+      });
+    }
+
+    return res.json({
+      message: 'Voucher discount configuration saved successfully.',
+      config: {
+        percent: updated.maxPercent,
+        amount: updated.maxAmount,
+        maxPercent: updated.maxPercent,
+        maxAmount: updated.maxAmount,
+      }
+    });
+  } catch (err) {
+    console.error('[Admin] Save voucher config error:', err);
+    return res.status(500).json({ error: 'Failed to save voucher configuration' });
+  }
+});
+
 export default router;
