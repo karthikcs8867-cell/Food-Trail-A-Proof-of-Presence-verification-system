@@ -22,7 +22,11 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
   // Form Fields
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
-  const [photoUrl, setPhotoUrl] = useState('');
+  const [foodPhoto, setFoodPhoto] = useState('');
+  const [foodPhotoPreview, setFoodPhotoPreview] = useState('');
+  const [uploadingFoodPhoto, setUploadingFoodPhoto] = useState(false);
+  const [foodPhotoFileName, setFoodPhotoFileName] = useState('');
+  const [foodPhotoError, setFoodPhotoError] = useState('');
 
   // Live Location States
   const [locating, setLocating] = useState(false);
@@ -62,6 +66,11 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
       if (modalContentRef.current) {
         modalContentRef.current.scrollTop = 0;
       }
+    } else {
+      setFoodPhoto('');
+      setFoodPhotoPreview('');
+      setFoodPhotoFileName('');
+      setFoodPhotoError('');
     }
   }, [isOpen]);
 
@@ -228,6 +237,60 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
     }
   };
 
+  // --- Food Photo Upload Handler ---
+  const handleFoodPhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['jpg', 'jpeg', 'png'].includes(ext) && !file.type.match(/^image\/(jpeg|png)$/)) {
+      setFoodPhotoError('Please upload a JPG or PNG image only.');
+      showToast('⚠️ Please upload a JPG or PNG image only.', 'error');
+      return;
+    }
+
+    setFoodPhotoError('');
+    const previewUrl = URL.createObjectURL(file);
+    setFoodPhotoPreview(previewUrl);
+    setFoodPhotoFileName(file.name);
+    setUploadingFoodPhoto(true);
+
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await fetch('/api/reviews/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setFoodPhoto(data.url);
+        showToast('📸 Food photo uploaded successfully!', 'success');
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch {
+      // Fallback: convert file to data URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFoodPhoto(reader.result);
+        showToast('📸 Food photo attached!', 'success');
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setUploadingFoodPhoto(false);
+    }
+  };
+
+  const handleRemoveFoodPhoto = () => {
+    setFoodPhoto('');
+    setFoodPhotoPreview('');
+    setFoodPhotoFileName('');
+    setFoodPhotoError('');
+  };
+
   // --- 3. Final Submission & Voucher Issuance ---
   const handleSubmitReview = async (e) => {
     e.preventDefault();
@@ -288,7 +351,7 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
         restaurantId: selectedRest._id,
         rating,
         comment: comment.trim(),
-        photos: photoUrl ? [photoUrl] : [],
+        photos: foodPhoto ? [foodPhoto] : [],
         verificationType: reviewMode,
         userLocation: userCoords,
         billData: ocrResult ? {
@@ -778,14 +841,117 @@ export default function SubmitReviewModal({ isOpen, onClose, initialRestaurant =
               </div>
 
               <div className="form-group">
-                <label className="form-label">5. Optional Food Photo URL</label>
-                <input
-                  type="url"
-                  className="form-input"
-                  placeholder="https://images.unsplash.com/photo-..."
-                  value={photoUrl}
-                  onChange={(e) => setPhotoUrl(e.target.value)}
-                />
+                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>5. Upload Food Photo (JPG or PNG)</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 400 }}>Optional</span>
+                </label>
+
+                {!foodPhoto && !foodPhotoPreview ? (
+                  <label
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '20px 16px',
+                      border: '2px dashed var(--border-medium)',
+                      borderRadius: '12px',
+                      cursor: uploadingFoodPhoto ? 'wait' : 'pointer',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      transition: 'border-color 0.2s, background 0.2s',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-medium)'; }}
+                  >
+                    {uploadingFoodPhoto ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                        <RefreshCw className="pulse-radar" size={26} color="var(--primary)" />
+                        <span style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--primary)' }}>Uploading food photo...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <UploadCloud size={28} color="var(--primary)" style={{ marginBottom: '6px' }} />
+                        <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>Click to Upload Food Photo</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                          Supports JPG, JPEG, or PNG format
+                        </span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                      disabled={uploadingFoodPhoto}
+                      onChange={handleFoodPhotoChange}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                ) : (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '12px',
+                      background: 'rgba(16, 185, 129, 0.08)',
+                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      borderRadius: '10px',
+                      padding: '10px 14px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                      <img
+                        src={foodPhotoPreview || foodPhoto}
+                        alt="Food Preview"
+                        style={{ width: '52px', height: '52px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
+                      />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10B981', fontWeight: 700, fontSize: '0.85rem' }}>
+                          <CheckCircle2 size={16} /> Food Photo Attached
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {foodPhotoFileName || 'food-photo.jpg'}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                      <label
+                        className="btn btn-ghost btn-sm"
+                        style={{ cursor: 'pointer', fontSize: '0.75rem', padding: '4px 8px' }}
+                      >
+                        Change
+                        <input
+                          type="file"
+                          accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                          disabled={uploadingFoodPhoto}
+                          onChange={handleFoodPhotoChange}
+                          style={{ display: 'none' }}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleRemoveFoodPhoto}
+                        className="btn btn-ghost btn-sm"
+                        style={{ fontSize: '0.75rem', padding: '4px 8px', color: '#EF4444' }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {foodPhotoError && (
+                  <div style={{
+                    marginTop: '8px',
+                    color: '#EF4444',
+                    fontSize: '0.78rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}>
+                    <AlertCircle size={14} />
+                    <span>{foodPhotoError}</span>
+                  </div>
+                )}
               </div>
 
               {/* Submission Warning Display */}

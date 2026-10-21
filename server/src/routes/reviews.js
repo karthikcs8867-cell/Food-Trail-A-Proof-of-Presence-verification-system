@@ -81,6 +81,26 @@ router.post('/verify-bill', authenticateToken, upload.single('receiptImage'), as
 });
 
 /**
+ * POST /api/reviews/upload - Upload a food photo (JPG or PNG) for reviews
+ */
+router.post('/upload', authenticateToken, upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Please upload a valid image file (JPG or PNG).' });
+    }
+    const imageUrl = `/uploads/${req.file.filename}`;
+    return res.json({
+      url: imageUrl,
+      filename: req.file.filename,
+      size: req.file.size,
+    });
+  } catch (err) {
+    console.error('[Reviews] Food photo upload error:', err);
+    return res.status(500).json({ error: 'Image upload failed.' });
+  }
+});
+
+/**
  * POST /api/reviews - Submit review and auto-issue reward voucher
  */
 router.post('/', authenticateToken, requireRole('customer'), async (req, res) => {

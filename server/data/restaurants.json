@@ -1,54 +1,5 @@
 [
   {
-    "ownerId": "ft_cadbd67bd7cf3a54",
-    "name": "Trattoria Roma - Waterfront Branch",
-    "tagline": "",
-    "description": "",
-    "address": "456 Harbor Pier Way",
-    "location": {
-      "lat": 12.975,
-      "lng": 77.601
-    },
-    "geofenceRadiusMeters": 200,
-    "cuisine": [
-      "Italian",
-      "Seafood"
-    ],
-    "priceRange": "₹₹",
-    "phone": "+1 (555) 345-6789",
-    "email": "test_owner@foodtrail.com",
-    "coverImage": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
-    "photos": [
-      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80"
-    ],
-    "menuItems": [
-      {
-        "id": "m_1",
-        "name": "Signature House Special",
-        "description": "Chef special prepared fresh with local herbs",
-        "price": 22,
-        "category": "Mains",
-        "image": ""
-      },
-      {
-        "id": "m_2",
-        "name": "Artisan Dessert Platter",
-        "description": "Decadent sweet treats",
-        "price": 10,
-        "category": "Desserts",
-        "image": ""
-      }
-    ],
-    "region": "Bengaluru Urban",
-    "isApproved": false,
-    "ratingAverage": 0,
-    "reviewCount": 0,
-    "_id": "ft_785cc4bbf60614e9",
-    "id": "ft_785cc4bbf60614e9",
-    "createdAt": "2026-08-28T12:04:15.818Z",
-    "updatedAt": "2026-08-28T12:04:15.818Z"
-  },
-  {
     "ownerId": "ft_ac4047771fe3ecdc",
     "name": "Mycem",
     "tagline": "",
@@ -124,36 +75,5 @@
     "id": "ft_99abca312f9c8516",
     "createdAt": "2026-10-21T05:10:41.166Z",
     "updatedAt": "2026-10-21T06:41:17.826Z"
-  },
-  {
-    "ownerId": "ft_431fe330189e32bc",
-    "name": "Test With Bill Restaurant",
-    "tagline": "",
-    "description": "",
-    "address": "Test Address, Bengaluru",
-    "taluk": "",
-    "location": {
-      "lat": 12.9716,
-      "lng": 77.5946
-    },
-    "geofenceRadiusMeters": 200,
-    "region": "Downtown Metro",
-    "cuisine": [],
-    "priceRange": "₹₹",
-    "phone": "",
-    "email": "mohancs5467@gmail.com",
-    "coverImage": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
-    "billImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-    "photos": [
-      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80"
-    ],
-    "menuItems": [],
-    "isApproved": false,
-    "ratingAverage": 0,
-    "reviewCount": 0,
-    "_id": "ft_a06d935bb1a9a70b",
-    "id": "ft_a06d935bb1a9a70b",
-    "createdAt": "2026-10-21T06:41:41.722Z",
-    "updatedAt": "2026-10-21T06:41:41.722Z"
   }
 ]
